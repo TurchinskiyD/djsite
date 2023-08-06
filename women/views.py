@@ -1,6 +1,8 @@
 from django.http import HttpResponseNotFound, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.shortcuts import HttpResponse
+
+from .forms import AddPostForm
 from .models import *
 
 # Create your views here.
@@ -50,7 +52,21 @@ def login(request):
 
 
 def add_page(request):
-    return HttpResponse("Додати статтю")
+    if request.method == 'POST':
+        form = AddPostForm(request.POST)
+        if form.is_valid():
+            try:
+                Women.objects.create(**form.cleaned_data)
+                return redirect('home')
+            except:
+                form.add_error(None, 'Помилка додавання посту')
+    else:
+        form = AddPostForm()
+    return render(request, 'women/addpage.html', {
+        'form': form,
+        'menu': menu,
+        'title': "Додавання статті",
+    })
 
 
 def show_post(request, post_slug):
