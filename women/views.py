@@ -1,5 +1,5 @@
 from django.http import HttpResponseNotFound, Http404
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.shortcuts import HttpResponse
 from .models import *
 
@@ -14,19 +14,19 @@ menu = [
 
 def index(request):
     posts = Women.objects.all()
-    cats = Category.objects.all()
+
     context = {'posts': posts,
-               'cats': cats,
+
                'menu': menu,
-               'title':'Головна сторінка',
+               'title': 'Головна сторінка',
                'cat_selected': 0
                }
 
-    return render(request,'women/index.html', context=context)
+    return render(request, 'women/index.html', context=context)
 
 
 def about(request):
-    return render(request,'women/about.html',
+    return render(request, 'women/about.html',
                   {'menu': menu, 'title': 'Про сайт'})
 
 
@@ -36,7 +36,7 @@ def categories(request, cat_id):
 
 def archive(request, year):
     if int(year) > 2020:
-        return redirect('home', permanent = False)
+        return redirect('home', permanent=False)
 
     return HttpResponse(f'<h1>Архів по рокам</h1><p>{year}</p>')
 
@@ -53,26 +53,33 @@ def add_page(request):
     return HttpResponse("Додати статтю")
 
 
-def show_post(request, post_id):
-    return HttpResponse(f"Відображення статті з id = {post_id}")
+def show_post(request, post_slug):
+    post = get_object_or_404(Women, slug=post_slug)
+
+    context = {'post': post,
+               'menu': menu,
+               'title': post.title,
+               'cat_selected': post.cat_id,
+               }
+
+    return render(request, 'women/post.html', context=context)
 
 
 def pageNotFound(request, exception):
     return HttpResponseNotFound('<h1>Сторінка не знайдена</h1>')
 
 
-def show_category(request, cat_id):
-    posts = Women.objects.filter(cat_id=cat_id)
-    cats = Category.objects.all()
+def show_category(request, cat_slug):
+    cat = Category.objects.get(slug=cat_slug)
+    posts = Women.objects.filter(cat_id=cat.id)
 
-    if len(posts) == 0:
-        raise Http404()
+    # if len(posts) == 0:
+    #     raise Http404()
 
     context = {'posts': posts,
-               'cats': cats,
                'menu': menu,
                'title': 'Відображення по рубрикам',
-               'cat_selected': cat_id
+               'cat_selected': cat.id
                }
 
     return render(request, 'women/index.html', context=context)
